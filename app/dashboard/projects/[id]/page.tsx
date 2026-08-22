@@ -6,7 +6,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ArrowLeft, FileText, Download, Copy, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 
 const allFiles = [
   "project-overview.md",
