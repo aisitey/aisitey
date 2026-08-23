@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -59,6 +59,16 @@ const authOptions = [
 ];
 
 export default function WizardArchitecturePage() {
+  return (
+    <Suspense fallback={null}>
+      <WizardArchitectureContent />
+    </Suspense>
+  );
+}
+
+// الـ content الحقيقي
+function WizardArchitectureContent() {
+    
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectIdFromUrl = searchParams.get("project_id");
