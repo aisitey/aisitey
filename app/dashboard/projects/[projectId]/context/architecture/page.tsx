@@ -996,21 +996,17 @@ export default function ArchitecturePage() {
   };
 
   const canSave =
-    stack.some(
-      (item) =>
-        item.layer.trim() &&
-        item.technology.trim(),
-    ) &&
-    folders.some(
-      (folder) =>
-        folder.name.trim() &&
-        folder.responsibility.trim(),
-    ) &&
-    entities.some(
-      (entity) =>
-        entity.name.trim() &&
-        entity.description.trim(),
-    );
+  stack.some(
+    (item) =>
+      item.layer.trim() &&
+      item.technology.trim(),
+  ) ||
+  folders.some(
+    (folder) => folder.name.trim(),
+  ) ||
+  entities.some(
+    (entity) => entity.name.trim(),
+  );
 
   const buildMarkdown = () => {
     const clean = (value: string) => value.trim();
