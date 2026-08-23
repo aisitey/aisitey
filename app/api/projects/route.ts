@@ -1,98 +1,147 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function POST(req: Request) {
+export async function GET() {
   try {
-    // 1. نجيب user من Clerk
     const { userId } = await auth();
-    const user = await currentUser();
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const email = user?.emailAddresses[0]?.emailAddress || 'unknown@email.com';
+    const supabase = createSupabaseServerClient();
 
-    const { name, description, tech_stack } = await req.json();
+    // Find the Supabase user by Clerk ID
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", userId)
+      .single();
 
-    if (!name || !tech_stack) {
+    if (userError || !user) {
+      console.error("[projects] User lookup error:", userError);
+
       return NextResponse.json(
-        { error: 'Name and tech stack are required' },
-        { status: 400 }
+        { error: "User not found" },
+        { status: 404 }
       );
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Load projects belonging to this user
+    const { data: projects, error: projectsError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-    // 2. نتأكد إن user موجود في Supabase
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('*')
-      .eq('clerk_id', userId)
-      .single();
+    if (projectsError) {
+      console.error("[projects] Load error:", projectsError);
 
-    let user_id;
-
-    if (existingUser) {
-      user_id = existingUser.id;
-    } else {
-      // 3. لو مش موجود، نعمله
-      const { data: newUser, error: userError } = await supabase
-        .from('users')
-        .insert({
-          clerk_id: userId,
-          email: email,
-        })
-        .select()
-        .single();
-
-      if (userError) {
-        console.error('Error creating user:', userError);
-        return NextResponse.json(
-          { error: 'Failed to create user' },
-          { status: 500 }
-        );
-      }
-
-      user_id = newUser.id;
-    }
-
-    // 4. نعمل project مرتبط بالـ user
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .insert({
-        user_id: user_id,
-        name,
-        description,
-        tech_stack,
-        status: 'active',
-      })
-      .select()
-      .single();
-
-    if (projectError) {
-      console.error('Error creating project:', projectError);
       return NextResponse.json(
-        { error: 'Failed to create project' },
+        { error: projectsError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      success: true,
-      project,
+      projects: projects ?? [],
     });
   } catch (error) {
-    console.error('Error in projects API:', error);
+    console.error("[projects] GET error:", error);
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Failed to load projects" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    const name =
+      typeof body.name === "string" ? body.name.trim() : "";
+
+    const description =
+      typeof body.description === "string"
+        ? body.description.trim() || null
+        : null;
+
+    const techStack =
+      typeof body.tech_stack === "string"
+        ? body.tech_stack.trim() || null
+        : null;
+
+    if (!name) {
+      return NextResponse.json(
+        { error: "Project name is required" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createSupabaseServerClient();
+
+    // Find the Supabase user by Clerk ID
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (userError || !user) {
+      console.error("[projects] User lookup error:", userError);
+
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Create project using the Supabase UUID
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .insert({
+        user_id: user.id,
+        name,
+        description,
+        tech_stack: techStack,
+        status: "active",
+      })
+      .select("*")
+      .single();
+
+    if (projectError) {
+      console.error("[projects] Create error:", projectError);
+
+      return NextResponse.json(
+        { error: projectError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { project },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("[projects] POST error:", error);
+
+    return NextResponse.json(
+      { error: "Failed to create project" },
       { status: 500 }
     );
   }
