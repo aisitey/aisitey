@@ -20,22 +20,30 @@ export default async function DashboardPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data: supabaseUser } = await supabase
+  const { data: supabaseUser, error: userError } = await supabase
     .from('users')
     .select('*')
     .eq('clerk_id', userId)
     .single();
 
-  const { data: projects } = await supabase
+  if (userError || !supabaseUser) {
+    console.error('Dashboard: user not found in Supabase for clerk_id:', userId, userError);
+  }
+
+  const { data: projects, error: projectsError } = await supabase
     .from('projects')
     .select('*')
     .eq('user_id', supabaseUser?.id)
     .order('created_at', { ascending: false });
 
+  if (projectsError) {
+    console.error('Dashboard: failed to fetch projects:', projectsError);
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-base">
       <Navbar />
-      <DashboardContent 
+      <DashboardContent
         userName={user?.firstName || null}
         projects={projects || []}
       />

@@ -19,18 +19,26 @@ export async function POST(req: Request) {
     );
 
     // نجيب user
-    const { data: supabaseUser } = await supabase
+    const { data: supabaseUser, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('clerk_id', userId)
       .single();
+
+    if (userError || !supabaseUser) {
+      console.error('User not found in Supabase for clerk_id:', userId, userError);
+      return NextResponse.json(
+        { error: 'User not synced to database yet. Please try again in a moment.' },
+        { status: 404 },
+      );
+    }
 
     // Check if progress exists
     const { data: existingProgress } = await supabase
       .from('wizard_progress')
       .select('*')
       .eq('project_id', project_id)
-      .eq('user_id', supabaseUser?.id)
+      .eq('user_id', supabaseUser.id)
       .single();
 
     if (existingProgress) {
@@ -46,7 +54,10 @@ export async function POST(req: Request) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Wizard progress update error:', error);
+        throw error;
+      }
 
       return NextResponse.json({ progress: data });
     } else {
@@ -55,14 +66,17 @@ export async function POST(req: Request) {
         .from('wizard_progress')
         .insert({
           project_id,
-          user_id: supabaseUser?.id,
+          user_id: supabaseUser.id,
           current_step,
           completed_files,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Wizard progress insert error:', error);
+        throw error;
+      }
 
       return NextResponse.json({ progress: data });
     }
@@ -87,20 +101,26 @@ export async function GET(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: supabaseUser } = await supabase
+    const { data: supabaseUser, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('clerk_id', userId)
       .single();
 
+    if (userError || !supabaseUser) {
+      console.error('User not found in Supabase for clerk_id:', userId, userError);
+      return NextResponse.json({ progress: null });
+    }
+
     const { data: progress, error } = await supabase
       .from('wizard_progress')
       .select('*')
       .eq('project_id', projectId)
-      .eq('user_id', supabaseUser?.id)
+      .eq('user_id', supabaseUser.id)
       .single();
 
     if (error && error.code !== 'PGRST116') {
+      console.error('Get progress error:', error);
       throw error;
     }
 
