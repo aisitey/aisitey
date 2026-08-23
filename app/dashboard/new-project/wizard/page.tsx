@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -64,7 +64,19 @@ const steps = [
   },
 ];
 
+// The default export is now just a thin wrapper. useSearchParams() requires
+// the component that calls it to be wrapped in <Suspense>, or the build
+// fails during prerendering with "Error occurred prerendering page". All
+// the real page logic now lives in WizardContent below.
 export default function WizardPage() {
+  return (
+    <Suspense fallback={null}>
+      <WizardContent />
+    </Suspense>
+  );
+}
+
+function WizardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const stepFromUrl = searchParams.get("step");
@@ -86,11 +98,38 @@ export default function WizardPage() {
     successCriteria: [""],
   });
 
+  const initialFormData = {
+    name: "",
+    overview: "",
+    goals: [""],
+    coreFlow: [""],
+    features: [{ category: "", items: [""] }],
+    inScope: [""],
+    outScope: [""],
+    successCriteria: [""],
+  };
+
+  // Clears the saved wizard data and resets the form back to a blank
+  // state. Call this after a project is fully generated, or from a
+  // "Start New Project" button/link.
+  const resetWizard = () => {
+    localStorage.removeItem("aisitey-wizard-step");
+    localStorage.removeItem("aisitey-wizard-data");
+    localStorage.removeItem("aisitey-wizard-project-id");
+    localStorage.removeItem("aisitey-wizard-completed-files");
+    setCurrentStep(1);
+    setFormData(initialFormData);
+    setSavedProjectId(null);
+    setCompletedFiles([]);
+  };
+
   // ============ Load everything once, on mount ============
   useEffect(() => {
     const savedStep = localStorage.getItem("aisitey-wizard-step");
     const savedData = localStorage.getItem("aisitey-wizard-data");
-    const savedProjectId = localStorage.getItem("aisitey-wizard-project-id");
+    const savedProjectIdFromStorage = localStorage.getItem(
+      "aisitey-wizard-project-id",
+    );
     const savedCompletedFiles = localStorage.getItem(
       "aisitey-wizard-completed-files",
     );
@@ -105,8 +144,8 @@ export default function WizardPage() {
     // الـ project id من الـ URL أولاً
     if (projectIdFromUrl) {
       setSavedProjectId(projectIdFromUrl);
-    } else if (savedProjectId) {
-      setSavedProjectId(savedProjectId);
+    } else if (savedProjectIdFromStorage) {
+      setSavedProjectId(savedProjectIdFromStorage);
     }
 
     // البيانات
@@ -206,6 +245,7 @@ export default function WizardPage() {
                     ? "memory"
                     : "progress-tracker";
 
+      // 1. Generate the file
       const response = await fetch("/api/generate-context", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -221,14 +261,12 @@ export default function WizardPage() {
         throw new Error(data.error || "Failed to generate");
       }
 
-      toast.success(`${data.file.name} generated!`, {
-        description: "File downloaded successfully.",
-      });
-
-      // Save project (لو لسه محفظناش)
+      // 2. Save project to Supabase FIRST
       let projectId = savedProjectId;
 
       if (!projectId) {
+        console.log("Saving project...");
+
         const saveResponse = await fetch("/api/projects", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -240,19 +278,25 @@ export default function WizardPage() {
         });
 
         const saveData = await saveResponse.json();
+        console.log("Save response:", saveData);
 
         if (saveResponse.ok && saveData.project) {
           projectId = saveData.project.id;
           setSavedProjectId(projectId);
+          console.log("Project saved with ID:", projectId);
+        } else {
+          console.error("Failed to save project:", saveData);
         }
       }
 
-      // Save wizard progress
+      // 3. Save wizard progress
       if (projectId) {
         const newCompletedFiles = [...completedFiles, data.file.name];
         setCompletedFiles(newCompletedFiles);
 
-        await fetch("/api/wizard-progress", {
+        console.log("Saving wizard progress...");
+
+        const progressResponse = await fetch("/api/wizard-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -261,9 +305,12 @@ export default function WizardPage() {
             completed_files: newCompletedFiles,
           }),
         });
+
+        const progressData = await progressResponse.json();
+        console.log("Progress response:", progressData);
       }
 
-      // Download the file
+      // 4. Download the file
       const blob = new Blob([data.file.content], { type: "text/markdown" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -272,11 +319,16 @@ export default function WizardPage() {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      // Redirect to project page
+      toast.success(`${data.file.name} generated!`, {
+        description: "File downloaded and project saved.",
+      });
+
+      // 5. Redirect to project page
       if (projectId) {
         router.push(`/dashboard/projects/${projectId}`);
       }
     } catch (error) {
+      console.error("Generate error:", error);
       toast.error("Failed to generate", {
         description:
           error instanceof Error ? error.message : "Please try again.",
