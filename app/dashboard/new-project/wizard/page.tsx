@@ -747,7 +747,7 @@ function WizardContent() {
               Back
             </button>
 
-            {currentStep < 7 ? (
+            {currentStep < 5 ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 disabled={!isStepValid()}
