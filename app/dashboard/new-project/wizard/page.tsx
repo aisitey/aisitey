@@ -16,13 +16,14 @@ import {
   Plus,
   X,
   Code2,
+  Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const steps = [
   {
     id: 1,
-    title: "Overview",
+    title: "Project Overview",
     file: "project-overview.md",
     icon: <FolderTree className="size-5" />,
   },
@@ -36,7 +37,7 @@ const steps = [
     id: 3,
     title: "UI Context",
     file: "ui-context.md",
-    icon: <FileText className="size-5" />,
+    icon: <Palette className="size-5" />,
   },
   {
     id: 4,
@@ -58,16 +59,12 @@ const steps = [
   },
   {
     id: 7,
-    title: "Progress",
+    title: "Progress Tracker",
     file: "progress-tracker.md",
     icon: <Check className="size-5" />,
   },
 ];
 
-// The default export is now just a thin wrapper. useSearchParams() requires
-// the component that calls it to be wrapped in <Suspense>, or the build
-// fails during prerendering with "Error occurred prerendering page". All
-// the real page logic now lives in WizardContent below.
 export default function WizardPage() {
   return (
     <Suspense fallback={null}>
@@ -85,6 +82,8 @@ function WizardContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
   const [completedFiles, setCompletedFiles] = useState<string[]>([]);
+  const [generatedFile, setGeneratedFile] = useState<{ name: string; content: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -98,57 +97,25 @@ function WizardContent() {
     successCriteria: [""],
   });
 
-  const initialFormData = {
-    name: "",
-    overview: "",
-    goals: [""],
-    coreFlow: [""],
-    features: [{ category: "", items: [""] }],
-    inScope: [""],
-    outScope: [""],
-    successCriteria: [""],
-  };
-
-  // Clears the saved wizard data and resets the form back to a blank
-  // state. Call this after a project is fully generated, or from a
-  // "Start New Project" button/link.
-  const resetWizard = () => {
-    localStorage.removeItem("aisitey-wizard-step");
-    localStorage.removeItem("aisitey-wizard-data");
-    localStorage.removeItem("aisitey-wizard-project-id");
-    localStorage.removeItem("aisitey-wizard-completed-files");
-    setCurrentStep(1);
-    setFormData(initialFormData);
-    setSavedProjectId(null);
-    setCompletedFiles([]);
-  };
-
-  // ============ Load everything once, on mount ============
+  // Load everything
   useEffect(() => {
     const savedStep = localStorage.getItem("aisitey-wizard-step");
     const savedData = localStorage.getItem("aisitey-wizard-data");
-    const savedProjectIdFromStorage = localStorage.getItem(
-      "aisitey-wizard-project-id",
-    );
-    const savedCompletedFiles = localStorage.getItem(
-      "aisitey-wizard-completed-files",
-    );
+    const savedProjectIdFromStorage = localStorage.getItem("aisitey-wizard-project-id");
+    const savedCompletedFiles = localStorage.getItem("aisitey-wizard-completed-files");
 
-    // الـ step من الـ URL أولاً
     if (stepFromUrl) {
       setCurrentStep(parseInt(stepFromUrl));
     } else if (savedStep) {
       setCurrentStep(parseInt(savedStep));
     }
 
-    // الـ project id من الـ URL أولاً
     if (projectIdFromUrl) {
       setSavedProjectId(projectIdFromUrl);
     } else if (savedProjectIdFromStorage) {
       setSavedProjectId(savedProjectIdFromStorage);
     }
 
-    // البيانات
     if (savedData) {
       try {
         setFormData(JSON.parse(savedData));
@@ -157,7 +124,6 @@ function WizardContent() {
       }
     }
 
-    // الملفات المكتملة
     if (savedCompletedFiles) {
       try {
         setCompletedFiles(JSON.parse(savedCompletedFiles));
@@ -169,13 +135,13 @@ function WizardContent() {
     setIsLoaded(true);
   }, [stepFromUrl, projectIdFromUrl]);
 
-  // ============ Save step — only after the initial load ============
+  // Save step
   useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("aisitey-wizard-step", currentStep.toString());
   }, [currentStep, isLoaded]);
 
-  // ============ Save formData — only after the initial load ============
+  // Save formData
   useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("aisitey-wizard-data", JSON.stringify(formData));
@@ -192,15 +158,9 @@ function WizardContent() {
   // Save completed files
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem(
-      "aisitey-wizard-completed-files",
-      JSON.stringify(completedFiles),
-    );
+    localStorage.setItem("aisitey-wizard-completed-files", JSON.stringify(completedFiles));
   }, [completedFiles, isLoaded]);
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Check if current step is valid
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
@@ -212,8 +172,7 @@ function WizardContent() {
         );
       case 3:
         return formData.features.some(
-          (f) =>
-            f.category.trim() !== "" && f.items.some((i) => i.trim() !== ""),
+          (f) => f.category.trim() !== "" && f.items.some((i) => i.trim() !== "")
         );
       case 4:
         return (
@@ -230,22 +189,8 @@ function WizardContent() {
     setIsLoading(true);
 
     try {
-      const fileType =
-        currentStep === 1
-          ? "project-overview"
-          : currentStep === 2
-            ? "architecture"
-            : currentStep === 3
-              ? "ui-context"
-              : currentStep === 4
-                ? "code-standards"
-                : currentStep === 5
-                  ? "ai-workflow-rules"
-                  : currentStep === 6
-                    ? "memory"
-                    : "progress-tracker";
+      const fileType = steps[currentStep - 1].file.replace(".md", "");
 
-      // 1. Generate the file
       const response = await fetch("/api/generate-context", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -261,12 +206,13 @@ function WizardContent() {
         throw new Error(data.error || "Failed to generate");
       }
 
-      // 2. Save project to Supabase FIRST
+      // نحفظ الملف المتولد
+      setGeneratedFile(data.file);
+
+      // Save project
       let projectId = savedProjectId;
 
       if (!projectId) {
-        console.log("Saving project...");
-
         const saveResponse = await fetch("/api/projects", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -278,25 +224,19 @@ function WizardContent() {
         });
 
         const saveData = await saveResponse.json();
-        console.log("Save response:", saveData);
 
         if (saveResponse.ok && saveData.project) {
           projectId = saveData.project.id;
           setSavedProjectId(projectId);
-          console.log("Project saved with ID:", projectId);
-        } else {
-          console.error("Failed to save project:", saveData);
         }
       }
 
-      // 3. Save wizard progress
+      // Save progress
       if (projectId) {
         const newCompletedFiles = [...completedFiles, data.file.name];
         setCompletedFiles(newCompletedFiles);
 
-        console.log("Saving wizard progress...");
-
-        const progressResponse = await fetch("/api/wizard-progress", {
+        await fetch("/api/wizard-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -305,12 +245,9 @@ function WizardContent() {
             completed_files: newCompletedFiles,
           }),
         });
-
-        const progressData = await progressResponse.json();
-        console.log("Progress response:", progressData);
       }
 
-      // 4. Download the file
+      // Download
       const blob = new Blob([data.file.content], { type: "text/markdown" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -320,21 +257,31 @@ function WizardContent() {
       window.URL.revokeObjectURL(url);
 
       toast.success(`${data.file.name} generated!`, {
-        description: "File downloaded and project saved.",
+        description: "File downloaded successfully.",
       });
-
-      // 5. Redirect to project page
-      if (projectId) {
-        router.push(`/dashboard/projects/${projectId}`);
-      }
     } catch (error) {
-      console.error("Generate error:", error);
       toast.error("Failed to generate", {
-        description:
-          error instanceof Error ? error.message : "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleNextWizard = () => {
+    setGeneratedFile(null);
+    
+    if (currentStep < 7) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // كل الملفات خلصت
+      toast.success("All files generated!", {
+        description: "Your complete context is ready.",
+      });
+      
+      if (savedProjectId) {
+        router.push(`/dashboard/projects/${savedProjectId}`);
+      }
     }
   };
 
@@ -356,15 +303,13 @@ function WizardContent() {
                         : "border-default bg-surface text-copy-muted"
                     }`}
                   >
-                    {currentStep > step.id ? (
-                      <Check className="size-4" />
-                    ) : (
-                      step.icon
-                    )}
+                    {currentStep > step.id ? <Check className="size-4" /> : step.icon}
                   </div>
                   {step.id < steps.length && (
                     <div
-                      className={`h-0.5 w-8 md:w-16 ${currentStep > step.id ? "bg-brand" : "bg-default"}`}
+                      className={`h-0.5 w-6 md:w-10 ${
+                        currentStep > step.id ? "bg-brand" : "bg-default"
+                      }`}
                     />
                   )}
                 </div>
@@ -372,8 +317,10 @@ function WizardContent() {
             </div>
             <div className="mt-4 text-center">
               <p className="text-sm font-medium text-brand">
-                Step {currentStep} of {steps.length}:{" "}
-                {steps[currentStep - 1].title}
+                Wizard {currentStep} of {steps.length}: {steps[currentStep - 1].title}
+              </p>
+              <p className="mt-1 text-xs text-copy-muted">
+                {steps[currentStep - 1].file}
               </p>
             </div>
           </div>
@@ -387,33 +334,25 @@ function WizardContent() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Step 1: Overview */}
+              {/* Step 1: Project Overview */}
               {currentStep === 1 && (
                 <div className="space-y-6">
                   <h2 className="text-2xl font-semibold">Project Overview</h2>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Project Name
-                    </label>
+                    <label className="mb-2 block text-sm font-medium">Project Name</label>
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="[Project Name]"
                       className="w-full rounded-xl border border-default bg-surface px-5 py-3.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Overview
-                    </label>
+                    <label className="mb-2 block text-sm font-medium">Overview</label>
                     <textarea
                       value={formData.overview}
-                      onChange={(e) =>
-                        setFormData({ ...formData, overview: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, overview: e.target.value })}
                       placeholder="Write your project overview to describing what this application does, who it's for, and what problem it solves."
                       rows={5}
                       className="w-full resize-none rounded-xl border border-default bg-surface px-5 py-3.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
@@ -442,9 +381,7 @@ function WizardContent() {
                       {formData.goals.length > 1 && (
                         <button
                           onClick={() => {
-                            const newGoals = formData.goals.filter(
-                              (_, i) => i !== index,
-                            );
+                            const newGoals = formData.goals.filter((_, i) => i !== index);
                             setFormData({ ...formData, goals: newGoals });
                           }}
                           className="rounded-xl border border-default px-4 text-red-400"
@@ -465,9 +402,7 @@ function WizardContent() {
                     Add Goal
                   </button>
 
-                  <h2 className="text-2xl font-semibold mt-8">
-                    Core User Flow
-                  </h2>
+                  <h2 className="text-2xl font-semibold mt-8">Core User Flow</h2>
                   {formData.coreFlow.map((step, index) => (
                     <div key={index} className="flex gap-2 mb-2">
                       <input
@@ -484,9 +419,7 @@ function WizardContent() {
                       {formData.coreFlow.length > 1 && (
                         <button
                           onClick={() => {
-                            const newFlow = formData.coreFlow.filter(
-                              (_, i) => i !== index,
-                            );
+                            const newFlow = formData.coreFlow.filter((_, i) => i !== index);
                             setFormData({ ...formData, coreFlow: newFlow });
                           }}
                           className="rounded-xl border border-default px-4 text-red-400"
@@ -514,10 +447,7 @@ function WizardContent() {
                 <div className="space-y-6">
                   <h2 className="text-2xl font-semibold">Features</h2>
                   {formData.features.map((feature, featureIndex) => (
-                    <div
-                      key={featureIndex}
-                      className="rounded-2xl border border-default bg-surface p-5"
-                    >
+                    <div key={featureIndex} className="rounded-2xl border border-default bg-surface p-5">
                       <div className="flex gap-2 mb-3">
                         <input
                           type="text"
@@ -532,9 +462,7 @@ function WizardContent() {
                         />
                         <button
                           onClick={() => {
-                            const newFeatures = formData.features.filter(
-                              (_, i) => i !== featureIndex,
-                            );
+                            const newFeatures = formData.features.filter((_, i) => i !== featureIndex);
                             setFormData({ ...formData, features: newFeatures });
                           }}
                           className="rounded-xl border border-default px-3 text-red-400"
@@ -549,8 +477,7 @@ function WizardContent() {
                           value={item}
                           onChange={(e) => {
                             const newFeatures = [...formData.features];
-                            newFeatures[featureIndex].items[itemIndex] =
-                              e.target.value;
+                            newFeatures[featureIndex].items[itemIndex] = e.target.value;
                             setFormData({ ...formData, features: newFeatures });
                           }}
                           placeholder={`Feature description ${itemIndex + 1}`}
@@ -572,10 +499,7 @@ function WizardContent() {
                   ))}
                   <button
                     onClick={() => {
-                      const newFeatures = [
-                        ...formData.features,
-                        { category: "", items: [""] },
-                      ];
+                      const newFeatures = [...formData.features, { category: "", items: [""] }];
                       setFormData({ ...formData, features: newFeatures });
                     }}
                     className="inline-flex items-center gap-2 text-sm font-medium text-brand"
@@ -606,9 +530,7 @@ function WizardContent() {
                       {formData.inScope.length > 1 && (
                         <button
                           onClick={() => {
-                            const newItems = formData.inScope.filter(
-                              (_, i) => i !== index,
-                            );
+                            const newItems = formData.inScope.filter((_, i) => i !== index);
                             setFormData({ ...formData, inScope: newItems });
                           }}
                           className="rounded-xl border border-default px-4 text-red-400"
@@ -646,9 +568,7 @@ function WizardContent() {
                       {formData.outScope.length > 1 && (
                         <button
                           onClick={() => {
-                            const newItems = formData.outScope.filter(
-                              (_, i) => i !== index,
-                            );
+                            const newItems = formData.outScope.filter((_, i) => i !== index);
                             setFormData({ ...formData, outScope: newItems });
                           }}
                           className="rounded-xl border border-default px-4 text-red-400"
@@ -669,9 +589,7 @@ function WizardContent() {
                     Add Out of Scope
                   </button>
 
-                  <h2 className="text-2xl font-semibold mt-8">
-                    Success Criteria
-                  </h2>
+                  <h2 className="text-2xl font-semibold mt-8">Success Criteria</h2>
                   {formData.successCriteria.map((item, index) => (
                     <div key={index} className="flex gap-2 mb-2">
                       <input
@@ -680,10 +598,7 @@ function WizardContent() {
                         onChange={(e) => {
                           const newItems = [...formData.successCriteria];
                           newItems[index] = e.target.value;
-                          setFormData({
-                            ...formData,
-                            successCriteria: newItems,
-                          });
+                          setFormData({ ...formData, successCriteria: newItems });
                         }}
                         placeholder={`Condition ${index + 1}`}
                         className="flex-1 rounded-xl border border-default bg-surface px-5 py-3.5 text-sm outline-none focus:border-brand"
@@ -691,13 +606,8 @@ function WizardContent() {
                       {formData.successCriteria.length > 1 && (
                         <button
                           onClick={() => {
-                            const newItems = formData.successCriteria.filter(
-                              (_, i) => i !== index,
-                            );
-                            setFormData({
-                              ...formData,
-                              successCriteria: newItems,
-                            });
+                            const newItems = formData.successCriteria.filter((_, i) => i !== index);
+                            setFormData({ ...formData, successCriteria: newItems });
                           }}
                           className="rounded-xl border border-default px-4 text-red-400"
                         >
@@ -719,18 +629,15 @@ function WizardContent() {
                 </div>
               )}
 
-              {/* Step 5: Generate */}
-              {currentStep === 5 && (
+              {/* Steps 5-7: Placeholders */}
+              {currentStep >= 5 && currentStep <= 7 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold">Ready to generate!</h2>
-                  <div className="rounded-2xl border border-default bg-surface p-6">
-                    <h3 className="font-medium">
-                      {formData.name || "Your Project"}
-                    </h3>
-                    <p className="mt-2 text-sm text-copy-secondary">
-                      {formData.overview}
-                    </p>
-                  </div>
+                  <h2 className="text-2xl font-semibold text-center">
+                    {steps[currentStep - 1].title}
+                  </h2>
+                  <p className="text-center text-copy-secondary">
+                    This wizard will be available soon.
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -748,12 +655,31 @@ function WizardContent() {
             </button>
 
             {currentStep < 5 ? (
+              currentStep === 4 ? (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+                >
+                  {isLoading ? "Generating..." : "Generate"}
+                  <Sparkles className="size-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  disabled={!isStepValid()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ArrowRight className="size-4" />
+                </button>
+              )
+            ) : generatedFile ? (
               <button
-                onClick={() => setCurrentStep(currentStep + 1)}
-                disabled={!isStepValid()}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={handleNextWizard}
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-dark"
               >
-                Next
+                Next Wizard
                 <ArrowRight className="size-4" />
               </button>
             ) : (
