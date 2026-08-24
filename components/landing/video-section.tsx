@@ -1,12 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Sparkles } from "lucide-react";
 
 export function VideoSection() {
-  const [isPlaying, setIsPlaying] = useState(false);
-
   return (
     <section className="px-6 py-32">
       <div className="mx-auto max-w-5xl">
@@ -41,41 +38,14 @@ export function VideoSection() {
           className="relative mx-auto mt-16 max-w-4xl"
         >
           <div className="relative overflow-hidden rounded-[2rem] border border-default bg-surface shadow-2xl shadow-brand/10">
-            {/* Video Placeholder / Actual Video */}
-            <div className="relative aspect-video">
-              {isPlaying ? (
-                <iframe
-                  src="https://www.youtube.com/embed/AkTQAbGNfhk?autoplay=1"
-                  title="aisitey demo"
-                  className="absolute inset-0 h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button
-                  onClick={() => setIsPlaying(true)}
-                  className="group absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-brand-soft to-subtle"
-                >
-                  {/* Play Button */}
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className="flex size-20 items-center justify-center rounded-full bg-brand text-white shadow-xl shadow-brand/30"
-                  >
-                    <Play className="size-8 fill-white" />
-                  </motion.div>
-
-                  {/* Text */}
-                  <p className="mt-6 text-sm font-medium text-copy-primary">
-                    Watch Demo
-                  </p>
-                  <p className="mt-1 text-xs text-copy-muted">
-                    2 min overview
-                  </p>
-                </button>
-              )}
-            </div>
+            {/* الفيديو يظهر مباشرة */}
+            <iframe
+              src="https://www.youtube.com/embed/AkTQAbGNfhk"
+              title="aisitey demo"
+              className="aspect-video w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
 
           {/* Decorative elements */}
