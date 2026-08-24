@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, X, Download, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Download } from "lucide-react";
 
 type CodeStandardsDocument = {
   id: string;
@@ -230,7 +230,7 @@ export default function CodeStandardsPage() {
     setList(list.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const canSave = true;
+  const canSave = generalRules.some((r) => r.trim() !== "");
 
   const buildMarkdown = () => {
     const clean = (value: string) => value.trim();
@@ -732,6 +732,7 @@ ${numbered(completionChecks)}
                 <button
                   type="button"
                   onClick={handleDownload}
+                  disabled={!canSave}
                   className="inline-flex items-center gap-2 rounded-xl border border-default px-4 py-2.5 text-sm font-medium text-copy-primary transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Download className="size-4" />
@@ -740,15 +741,10 @@ ${numbered(completionChecks)}
                 <button
                   type="button"
                   onClick={handleSave}
+                  disabled={isSaving || !canSave}
                   className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {isSaving ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Save className="size-4" />
-                  )}
-
-                  Save
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>

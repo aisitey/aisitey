@@ -179,6 +179,7 @@ export default function ProjectOverviewEditPage() {
           <button
             type="button"
             onClick={handleSave}
+            disabled={isSaving}
             className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? (
@@ -243,6 +244,7 @@ export default function ProjectOverviewEditPage() {
           <button
             type="button"
             onClick={handleSave}
+            disabled={isSaving}
             className="inline-flex items-center gap-2 rounded-xl border border-default px-4 py-2 text-sm font-medium text-copy-primary transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? (
