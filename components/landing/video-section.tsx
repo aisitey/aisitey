@@ -45,7 +45,7 @@ export function VideoSection() {
             <div className="relative aspect-video">
               {isPlaying ? (
                 <iframe
-                  src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=1"
+                  src="https://www.youtube.com/embed/AkTQAbGNfhk?autoplay=1"
                   title="aisitey demo"
                   className="absolute inset-0 h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
