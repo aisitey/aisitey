@@ -16,6 +16,7 @@ import {
   Loader2,
   Settings,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Project = {
   id: string;
@@ -128,14 +129,52 @@ export default function ProjectPage() {
   }, [projectId]);
 
   if (isLoading) {
-    return (
-      <main className="min-h-screen bg-base">
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="size-6 animate-spin text-brand" />
+  return (
+    <main className="min-h-screen bg-base">
+      <div className="mx-auto max-w-6xl px-6 py-12">
+        {/* Back skeleton */}
+        <Skeleton className="h-4 w-24" />
+
+        {/* Header skeleton */}
+        <div className="mt-8">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="mt-3 h-8 w-2/3" />
+          <Skeleton className="mt-3 h-4 w-1/2" />
         </div>
-      </main>
-    );
-  }
+
+        {/* Info cards skeleton */}
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
+
+        {/* Context files skeleton */}
+        <div className="mt-10">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="mt-2 h-4 w-64" />
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {[...Array(7)].map((_, i) => (
+              <div key={i} className="rounded-2xl border border-default bg-surface p-5">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-11 w-11 rounded-xl" />
+                  <div className="flex-1">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="mt-2 h-3 w-1/2" />
+                    <Skeleton className="mt-4 h-4 w-full" />
+                    <Skeleton className="mt-2 h-4 w-5/6" />
+                    <Skeleton className="mt-4 h-4 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
 
   if (error || !project) {
     return (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, FolderKanban, Trash2, Loader2, X, Calendar, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Project = {
   id: string;
@@ -150,8 +151,20 @@ export default function DashboardPage() {
           {/* Projects */}
           <section className="mt-10">
             {isLoading ? (
-              <div className="flex min-h-64 items-center justify-center rounded-2xl border border-default bg-surface">
-                <Loader2 className="size-6 animate-spin text-brand" />
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-default bg-surface p-6">
+                    <div className="flex items-start justify-between">
+                      <Skeleton className="h-11 w-11 rounded-xl" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                    <Skeleton className="mt-5 h-6 w-3/4" />
+                    <Skeleton className="mt-3 h-4 w-full" />
+                    <Skeleton className="mt-2 h-4 w-2/3" />
+                    <Skeleton className="mt-5 h-4 w-1/2" />
+                    <Skeleton className="mt-3 h-8 w-full rounded-xl" />
+                  </div>
+                ))}
               </div>
             ) : projects.length === 0 ? (
               <div className="rounded-2xl border border-default bg-surface p-10">
