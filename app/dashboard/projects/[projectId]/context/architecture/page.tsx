@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, X, Download } from "lucide-react";
+import { ArrowLeft, Plus, X, Download, Save, Loader2 } from "lucide-react";
 
 type StackItem = {
   layer: string;
@@ -2240,7 +2240,6 @@ ${decisionSections || "Not specified"}
                 <button
                   type="button"
                   onClick={handleDownload}
-                  disabled={!canSave}
                   className="inline-flex items-center gap-2 rounded-xl border border-default px-4 py-2.5 text-sm font-medium text-copy-primary transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Download className="size-4" />
@@ -2250,10 +2249,15 @@ ${decisionSections || "Not specified"}
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={isSaving || !canSave}
                   className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {isSaving ? "Saving..." : "Save Changes"}
+                  {isSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Save className="size-4" />
+                  )}
+
+                  Save
                 </button>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, FolderKanban, Trash2, Loader2, X } from "lucide-react";
+import { Plus, FolderKanban, Trash2, Loader2, X, Calendar, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 
@@ -114,11 +114,26 @@ export default function DashboardPage() {
               <p className="mt-2 text-sm text-copy-muted">
                 Manage your projects and build their AI context.
               </p>
+
+              {/* ✅ عدد المشاريع - كبير وأزرق */}
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-5xl font-semibold text-brand">
+                  {projects.length}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-copy-primary">
+                    Project{projects.length !== 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs text-copy-muted">
+                    Total projects
+                  </p>
+                </div>
+              </div>
             </div>
 
             <Link
               href="/dashboard/new-project"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark"
             >
               <Plus className="size-4" />
               New Project
@@ -141,8 +156,9 @@ export default function DashboardPage() {
             ) : projects.length === 0 ? (
               <div className="rounded-2xl border border-default bg-surface p-10">
                 <div className="flex flex-col items-center justify-center text-center">
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-brand/10">
-                    <FolderKanban className="size-7 text-brand" />
+                  {/* ✅ أيقونة ملونة */}
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/20">
+                    <FolderKanban className="size-7" />
                   </div>
 
                   <h2 className="mt-5 text-lg font-semibold text-copy-primary">
@@ -157,7 +173,7 @@ export default function DashboardPage() {
 
                   <Link
                     href="/dashboard/new-project"
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl border border-default px-5 py-2.5 text-sm font-medium text-copy-primary transition hover:border-brand hover:text-brand"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl border border-brand px-5 py-2.5 text-sm font-medium text-brand transition hover:bg-brand-soft"
                   >
                     <Plus className="size-4" />
                     Create your first project
@@ -169,15 +185,16 @@ export default function DashboardPage() {
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="group rounded-2xl border border-default bg-surface p-6 transition hover:border-brand/40"
+                    className="group rounded-2xl border border-default bg-surface p-6 transition hover:border-brand/40 hover:shadow-lg hover:shadow-brand/10"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <Link
                         href={`/dashboard/projects/${project.id}`}
                         className="min-w-0 flex-1"
                       >
-                        <div className="flex size-11 items-center justify-center rounded-xl bg-brand/10">
-                          <FolderKanban className="size-5 text-brand" />
+                        {/* ✅ أيقونة ملونة */}
+                        <div className="flex size-11 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/20">
+                          <FolderKanban className="size-5" />
                         </div>
 
                         <h2 className="mt-5 truncate text-lg font-semibold text-copy-primary transition group-hover:text-brand">
@@ -214,6 +231,19 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     )}
+
+                    {/* ✅ التاريخ بالأزرق */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <Calendar className="size-3.5 text-emerald-600" />
+                      <p className="text-xs font-medium text-emerald-600">
+                        Created{" "}
+                        {new Date(project.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
 
                     <Link
                       href={`/dashboard/projects/${project.id}`}
