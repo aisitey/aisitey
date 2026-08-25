@@ -40,7 +40,7 @@ export function VideoSection() {
           <div className="relative overflow-hidden rounded-[2rem] border border-default bg-surface shadow-2xl shadow-brand/10">
             {/* الفيديو يظهر مباشرة */}
             <iframe
-              src="https://www.youtube.com/embed/AkTQAbGNfhk"
+              src="https://www.youtube.com/embed/QQi0QKzkfTs"
               title="aisitey demo"
               className="aspect-video w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
