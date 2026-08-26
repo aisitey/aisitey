@@ -87,5 +87,5 @@ Once your context files are filled in, give them to your AI agent:
 
 ## Need Help?
 
-- GitHub Issues: https://github.com/WalaaMoFekry/aisitey/issues
+- GitHub Issues: https://github.com/aisitey/aisitey
 - Website: https://aisitey.com

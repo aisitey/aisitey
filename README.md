@@ -73,7 +73,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🌐 Links
 
 - Website: [aisitey.com](https://aisitey.com)
-- GitHub: [github.com/WalaaMoFekry/aisitey](https://github.com/WalaaMoFekry/aisitey)
+- GitHub: [github.com/WalaaMoFekry/aisitey](https://github.com/aisitey/aisitey)
 - npm: [npmjs.com/package/aisitey](https://www.npmjs.com/package/aisitey)
 
 ## 👩‍💻 Author

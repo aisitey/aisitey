@@ -109,7 +109,7 @@ export function CTA() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <a
-                  href="https://github.com/WalaaMoFekry/aisitey-contexts"
+                  href="https://github.com/aisitey/aisitey"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl border border-default bg-surface px-6 py-3 text-sm font-medium text-copy-primary transition-colors hover:border-brand/30 hover:text-brand hover:shadow-lg hover:shadow-brand/10"
                 >

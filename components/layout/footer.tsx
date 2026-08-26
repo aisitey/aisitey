@@ -75,7 +75,7 @@ export function Footer() {
             {/* Social Links */}
             <div className="flex items-center gap-3">
               <a
-                href="https://github.com/WalaaMoFekry/aisitey-contexts"
+                href="https://github.com/aisitey/aisitey"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-9 items-center justify-center rounded-xl border border-default text-copy-secondary transition-all hover:border-brand/30 hover:text-brand hover:shadow-sm"
