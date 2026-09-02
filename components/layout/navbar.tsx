@@ -16,7 +16,6 @@ import { motion } from "framer-motion";
 const links = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "Templates", href: "/templates" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
 ];
 

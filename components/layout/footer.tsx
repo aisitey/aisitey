@@ -32,13 +32,6 @@ export function Footer() {
             </Link>
 
             <Link
-              href="/pricing"
-              className="text-sm text-copy-secondary transition-colors hover:text-brand"
-            >
-              Pricing
-            </Link>
-
-            <Link
               href="/blog"
               className="text-sm text-copy-secondary transition-colors hover:text-brand"
             >

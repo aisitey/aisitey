@@ -4,8 +4,9 @@ excerpt: "The real reason AI invents features and forgets decisions. Plus the se
 date: "2026-08-20"
 readTime: "5 min"
 category: "Guide"
+imageUrl: "/images/blog/why-ai-agents-go-off-track.png"
+mediumUrl: "https://medium.com/@walaafekry.ai/why-ai-agents-go-off-track-and-how-to-stop-them-af99b866d13c"
 ---
-
 
 We've all been there. You ask an AI agent to build a simple feature, and it comes back with:
 

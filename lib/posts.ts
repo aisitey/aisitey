@@ -12,6 +12,8 @@ export interface Post {
   readTime: string;
   category: string;
   content: string;
+  mediumUrl?: string;
+  imageUrl?: string;
 }
 
 export function getAllPosts(): Post[] {
@@ -38,6 +40,8 @@ export function getAllPosts(): Post[] {
         readTime: data.readTime || '5 min',
         category: data.category || 'General',
         content,
+        mediumUrl: data.mediumUrl,
+        imageUrl: data.imageUrl || null,
       };
     })
     .sort((a, b) => (a.date < b.date ? 1 : -1));
