@@ -12,6 +12,7 @@ import { SocialProof } from "@/components/landing/social-proof";
 import { WhyAisitey } from "@/components/landing/why-aisitey";
 import { Newsletter } from "@/components/landing/newsletter";
 import { VideoSection } from "@/components/landing/video-section";
+import { Skills } from "@/components/landing/skills";
 
 export const metadata: Metadata = {
   title: "Build with Context, Not Chaos",
@@ -44,6 +45,8 @@ export default async function Home() {
         <section id="comparison">
           <Comparison />
         </section>
+
+        <Skills />
 
         <section id="memory">
           <Memory />
